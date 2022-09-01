@@ -1,0 +1,22 @@
+---
+  - name: "Install podman and prometheus"
+    hosts: localhost
+    connection: local 
+    tasks:
+
+    - name: "Ensure podman is installed"
+      yum:
+        name: podman
+        state: present
+
+    - name: "Pull prometheus"
+      podman_image:
+        name: quay.io/prometheus/prometheus
+
+    - name: "Run prometheus"
+      containers.podman.podman_container:
+        name: prometheus-prometheus
+        image: quay.io/prometheus/prometheus
+        state: started
+        volume: ./prometheus.yml:/etc/prometheus/prometheus.yml:z 
+        network: host 

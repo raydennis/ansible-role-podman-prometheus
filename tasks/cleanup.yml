@@ -1,0 +1,19 @@
+
+
+        
+---
+  - name: Remove prometheus
+    podman_image:
+      name: quay.io/prometheus/prometheus
+      state: absent
+
+  - name: Remove path
+    file:
+      path: "/etc/prometheus/"
+      state: absent
+  
+  - name: Remove container
+    containers.podman.podman_container:
+      name: prometheus-prometheus
+      image: quay.io/prometheus/prometheus
+      state: absent

@@ -1,0 +1,27 @@
+---
+  - name: "Ensure podman is installed"
+    yum:
+      name: podman
+      state: present
+
+  - name: "Pull prometheus"
+    podman_image:
+      name: quay.io/prometheus/prometheus
+
+  - name: Create path
+    file:
+      path: "/etc/prometheus/"
+      state: directory
+  
+  - name: copy prometheus.yml
+    copy:
+      src: ./inv/{{CLUSTER_NAME}}/prometheus.yml
+      dest: /etc/prometheus/prometheus.yml
+  
+  - name: "Run prometheus"
+    containers.podman.podman_container:
+      name: prometheus
+      image: quay.io/prometheus/prometheus
+      state: started
+      volume: /etc/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:z 
+      network: host 

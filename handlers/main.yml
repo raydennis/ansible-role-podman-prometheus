@@ -1,0 +1,18 @@
+---
+- name: Restart Prometheus
+  containers.podman.podman_container:
+    name: prometheus
+    image: quay.io/prometheus/prometheus
+    state: started
+    volume: /etc/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:z 
+    network: host 
+    restart: yes
+
+- name: Restart Alertmanager
+  containers.podman.podman_container:
+    name: prometheus
+    image: quay.io/prometheus/alertmanager
+    state: started
+    volume: /etc/prometheus/alertmanager.yml:/etc/prometheus/alertmanager.yml:z 
+    network: host 
+    restart: yes

@@ -1,27 +1,58 @@
 ---
-  - name: "Ensure podman is installed"
-    yum:
-      name: podman
-      state: present
+- name: Ensure Podman is installed
+  package:
+    name: podman
+    state: present
 
-  - name: "Pull prometheus"
-    podman_image:
-      name: quay.io/prometheus/prometheus
+- name: Pull Prometheus
+  podman_image:
+    name: quay.io/prometheus/prometheus
 
-  - name: Create path
-    file:
-      path: "/etc/prometheus/"
-      state: directory
-  
-  - name: copy prometheus.yml
-    copy:
-      src: ./inv/{{CLUSTER_NAME}}/prometheus.yml
-      dest: /etc/prometheus/prometheus.yml
-  
-  - name: "Run prometheus"
-    containers.podman.podman_container:
-      name: prometheus
-      image: quay.io/prometheus/prometheus
-      state: started
-      volume: /etc/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:z 
-      network: host 
+- name: Create path
+  file:
+    path: "/etc/prometheus/"
+    state: directory
+
+- name: Copy prometheus.yml
+  copy:
+    src: ./inv/{{CLUSTER_NAME}}/prometheus/prometheus.yml
+    dest: /etc/prometheus/prometheus.yml
+  notify:
+    - Restart Prometheus
+
+- name: Copy alert.rules.yml
+  copy:
+    src: ./inv/{{CLUSTER_NAME}}/prometheus/alert.rules.yml
+    dest: /etc/prometheus/alert.rules.yml
+  notify:
+    - Restart Prometheus
+
+- name: Run Prometheus
+  containers.podman.podman_container:
+    name: prometheus
+    image: quay.io/prometheus/prometheus
+    state: started
+    volumes: 
+      - /etc/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:z
+      - /etc/prometheus/alert.rules.yml:/etc/prometheus/alert.rules.yml:z 
+    network: host 
+
+- name: Pull Alertmanager
+  podman_image:
+    name: quay.io/prometheus/alertmanager
+
+- name: Copy alertmanager.yml
+  copy:
+    src: ./inv/{{CLUSTER_NAME}}/prometheus/alertmanager.yml
+    dest: /etc/prometheus/alertmanager.yml
+  notify:
+    - Restart Alertmanager
+ 
+- name: Run Alertmanager
+  containers.podman.podman_container:
+    name: alertmanager
+    image: quay.io/prometheus/alertmanager
+    state: started
+    volume: /etc/prometheus/alertmanager.yml:/etc/prometheus/alertmanager.yml:z 
+    command: '--config.file=/etc/prometheus/alertmanager.yml'
+    network: host 
